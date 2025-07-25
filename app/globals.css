@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary: 217 91% 60%; /* Bright Blue */
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 142 76% 36%; /* Vibrant Green */
+    --secondary-foreground: 210 20% 98%;
+
+    --accent: 271 81% 56%; /* Purple */
+    --accent-foreground: 210 20% 98%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --destructive: 0 84.2% 60.2%; /* Red */
+    --destructive-foreground: 210 20% 98%;
+
+    --warning: 38 92% 50%; /* Orange */
+    --warning-foreground: 210 20% 98%;
+
+    --success: 142 76% 36%; /* Green */
+    --success-foreground: 210 20% 98%;
+
+    --info: 199 89% 48%; /* Cyan */
+    --info-foreground: 210 20% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 217 91% 65%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 142 76% 40%;
+    --secondary-foreground: 210 20% 98%;
+
+    --accent: 271 81% 60%;
+    --accent-foreground: 210 20% 98%;
+
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 210 20% 98%;
+
+    --success: 142 76% 40%;
+    --success-foreground: 210 20% 98%;
+
+    --info: 199 89% 52%;
+    --info-foreground: 210 20% 98%;
+
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 217 91% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 50%, hsl(var(--accent)) 100%);
+  }
+
+  .card-gradient {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  }
+
+  .success-gradient {
+    background: linear-gradient(135deg, hsl(var(--success)) 0%, hsl(var(--secondary)) 100%);
+  }
+
+  .warning-gradient {
+    background: linear-gradient(135deg, hsl(var(--warning)) 0%, hsl(var(--destructive)) 100%);
+  }
+
+  .info-gradient {
+    background: linear-gradient(135deg, hsl(var(--info)) 0%, hsl(var(--primary)) 100%);
+  }
+}
