@@ -110,6 +110,7 @@ interface AppState {
   addLoan: (loan: Omit<Loan, "id" | "totalInterest" | "paidAmount" | "remainingAmount">) => Promise<void>
   updateLoan: (id: string, loan: Partial<Loan>) => Promise<void>
   deleteLoan: (id: string) => Promise<void>
+  completeLoan: (id: string) => Promise<void>
 
   addRepayment: (repayment: Omit<Repayment, "id" | "receiptId">) => Promise<void>
   updateRepayment: (id: string, repayment: Partial<Repayment>) => Promise<void>
@@ -205,7 +206,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const minutes = calculateMinutesBetween(startDate)
     // Annual rate / 100 / 365 days / 24 hours / 60 minutes
     const interest = (principal * rate * minutes) / (100 * 365 * 24 * 60)
-    return Number.parseFloat(interest.toFixed(4)) // Ensure 4 decimal places for calculation
+    return Math.ceil(interest) // Round up to next whole number
   },
 
   calculateAvailableFunds: () => {
@@ -237,9 +238,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const customerRepayments = state.repayments.filter((repayment) => repayment.customerId === customer.id)
 
         const totalLoanAmount = customerLoans.reduce((sum, loan) => sum + loan.amount, 0)
-        // Recalculate total interest for each loan based on current time
+        // Recalculate total interest for each loan based on current time (skip completed loans)
         const totalInterestAccrued = customerLoans.reduce(
-          (sum, loan) => sum + get().calculateInterest(loan.amount, loan.interestRate, loan.startDate),
+          (sum, loan) => sum + (loan.status === "પૂર્ણ" ? 0 : get().calculateInterest(loan.amount, loan.interestRate, loan.startDate)),
           0,
         )
         const paidAmount = customerRepayments.reduce((sum, repayment) => sum + repayment.amount, 0)
@@ -251,9 +252,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
         return {
           ...customer,
           totalLoanAmount,
-          totalInterest: Number.parseFloat(totalInterestAccrued.toFixed(4)), // Store with 4 decimals
+          totalInterest: totalInterestAccrued, // Whole number
           paidAmount,
-          remainingAmount: Number.parseFloat(remainingAmount.toFixed(4)), // Store with 4 decimals
+          remainingAmount: Math.ceil(remainingAmount), // Round up to next whole number
         }
       })
 
@@ -262,18 +263,18 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const totalPaidForLoan = loanRepayments.reduce((sum, repayment) => sum + repayment.amount, 0)
         const totalDiscountForLoan = loanRepayments.reduce((sum, repayment) => sum + repayment.discountGiven, 0)
 
-        // Recalculate total interest for this specific loan based on current time
-        const currentLoanInterest = get().calculateInterest(loan.amount, loan.interestRate, loan.startDate)
+        // Don't calculate interest for completed loans
+        const currentLoanInterest = loan.status === "પૂર્ણ" ? 0 : get().calculateInterest(loan.amount, loan.interestRate, loan.startDate)
 
         // Remaining amount considers both cash payments and discounts given
-        const remainingAmount = loan.amount + currentLoanInterest - (totalPaidForLoan + totalDiscountForLoan)
+        const remainingAmount = loan.status === "પૂર્ણ" ? 0 : loan.amount + currentLoanInterest - (totalPaidForLoan + totalDiscountForLoan)
 
         return {
           ...loan,
-          totalInterest: Number.parseFloat(currentLoanInterest.toFixed(4)), // Update loan's total interest
+          totalInterest: currentLoanInterest,
           paidAmount: totalPaidForLoan,
-          remainingAmount: Number.parseFloat(remainingAmount.toFixed(4)), // Allow negative for loan remaining amount
-          status: remainingAmount <= 0 ? "પૂર્ણ" : "સક્રિય",
+          remainingAmount: loan.status === "પૂર્ણ" ? 0 : Math.ceil(remainingAmount),
+          status: loan.status === "પૂર્ણ" ? "પૂર્ણ" : (remainingAmount <= 0 ? "પૂર્ણ" : "સક્રિય"),
         }
       })
 
@@ -558,7 +559,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       customer_id: repaymentData.customerId,
       customer_name: repaymentData.customerName,
       amount: repaymentData.amount, // Total cash amount paid by customer
-      interest_info: Number.parseFloat(interestPortionOfThisPayment.toFixed(4)), // Actual interest covered by this payment's cash amount + discount portion
+      interest_info: Math.ceil(interestPortionOfThisPayment), // Round up to next whole number
       discount_given: repaymentData.discountGiven, // Discount given, separate from cash payment
       payment_date: repaymentData.date,
       receipt_id: receiptId,
@@ -616,7 +617,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       // Ensure interestInfo is not negative
       if (newInterestPortionOfThisPayment < 0) newInterestPortionOfThisPayment = 0
 
-      updatedRepaymentData.interestInfo = Number.parseFloat(newInterestPortionOfThisPayment.toFixed(4))
+      updatedRepaymentData.interestInfo = Math.ceil(newInterestPortionOfThisPayment)
     }
 
     const dbUpdates: Partial<DatabaseRepayment> = {
@@ -675,6 +676,41 @@ export const useAppStore = create<AppState>()((set, get) => ({
       await get().fetchInitialData()
     } catch (error) {
       console.error("Error adding fund transaction:", error)
+    }
+  },
+
+  completeLoan: async (id) => {
+    const state = get()
+    const loanToComplete = state.loans.find((l) => l.id === id)
+    if (!loanToComplete || loanToComplete.status === "પૂર્ણ") return
+
+    // Mark loan as completed with current paid amount, zero interest and remaining
+    const dbUpdates: Partial<DatabaseLoan> = {
+      status: "પૂર્ણ",
+      total_interest: 0,
+      remaining_amount: 0,
+      paid_amount: loanToComplete.amount, // Mark full principal as paid
+    }
+
+    const existingHistoryIds = state.history.map((h) => h.id)
+    const historyId = generateNextId("H", existingHistoryIds)
+    const dbHistoryItem: Omit<DatabaseHistory, "created_at" | "updated_at"> = {
+      id: historyId,
+      activity_type: "લોન આપેલ",
+      customer_id: loanToComplete.customerId,
+      customer_name: loanToComplete.customerName,
+      amount: loanToComplete.amount,
+      activity_date: new Date().toISOString().split('T')[0],
+      status: "પૂર્ણ",
+      description: "લોન પૂર્ણ કરવામાં આવ્યું",
+    }
+
+    try {
+      await updateLoanDb(id, dbUpdates)
+      await createHistoryItem(dbHistoryItem)
+      await get().fetchInitialData()
+    } catch (error) {
+      console.error("Error completing loan:", error)
     }
   },
 }))

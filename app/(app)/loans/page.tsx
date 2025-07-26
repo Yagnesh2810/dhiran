@@ -18,12 +18,12 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Calculator, Eye, Receipt, Edit, Trash2, Printer } from "lucide-react"
+import { Plus, Calculator, Eye, Receipt, Edit, Trash2, Printer, CheckCircle } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { generateLoansPrint, generateReceiptPrint } from "@/lib/pdf-utils"
 
 export default function LoansPage() {
-  const { loans, customers, addLoan, updateLoan, deleteLoan, calculateInterest } = useAppStore()
+  const { loans, customers, addLoan, updateLoan, deleteLoan, completeLoan, calculateInterest } = useAppStore()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [viewingLoan, setViewingLoan] = useState<any>(null)
   const [editingLoan, setEditingLoan] = useState<any>(null)
@@ -109,9 +109,22 @@ export default function LoansPage() {
     }
   }
 
+  const handleCompleteLoan = (loanId: string) => {
+    if (confirm("શું તમે આ લોનને પૂર્ણ કરવા માંગો છો? આ ક્રિયા પછી વ્યાજ 0 થઈ જશે.")) {
+      completeLoan(loanId)
+    }
+  }
+
   // Calculate statistics
   const totalLoanAmount = loans.reduce((sum, loan) => sum + loan.amount, 0)
-  const totalInterest = loans.reduce((sum, loan) => sum + loan.totalInterest, 0)
+  const totalInterest = loans.reduce((sum, loan) => {
+    // For completed loans, calculate the interest they had when active
+    // For active loans, use current calculated interest
+    if (loan.status === "પૂર્ણ") {
+      return sum + calculateInterest(loan.amount, loan.interestRate, loan.startDate)
+    }
+    return sum + loan.totalInterest
+  }, 0)
   const totalRemaining = loans.reduce((sum, loan) => sum + loan.remainingAmount, 0)
 
   return (
@@ -152,7 +165,7 @@ export default function LoansPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">
-              ₹{totalInterest.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
+              ₹{totalInterest.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">કુલ જનરેટ થયેલ વ્યાજ</p>
           </CardContent>
@@ -231,18 +244,10 @@ export default function LoansPage() {
                           <p>વ્યાજ દર: {calculatorResult.rate}% (વાર્ષિક)</p>
                           <p>મિનિટો: {calculatorResult.minutes.toFixed(2)}</p>
                           <p>
-                            વ્યાજ: ₹
-                            {calculatorResult.interest.toLocaleString(undefined, {
-                              minimumFractionDigits: 4,
-                              maximumFractionDigits: 4,
-                            })}
+                            વ્યાજ: ₹{Math.ceil(calculatorResult.interest).toLocaleString()}
                           </p>
                           <p className="font-bold">
-                            કુલ રકમ: ₹
-                            {calculatorResult.total.toLocaleString(undefined, {
-                              minimumFractionDigits: 4,
-                              maximumFractionDigits: 4,
-                            })}
+                            કુલ રકમ: ₹{Math.ceil(calculatorResult.total).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -391,18 +396,14 @@ export default function LoansPage() {
                     <TableCell>{loan.startDate}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={loan.status === "સક્રિય" ? "default" : "secondary"}
-                        className={loan.status === "સક્રિય" ? "bg-success" : "bg-muted"}
+                        variant={loan.status === "સક્રિય" ? "default" : loan.status === "પૂર્ણ" ? "outline" : "secondary"}
+                        className={loan.status === "સક્રિય" ? "bg-success" : loan.status === "પૂર્ણ" ? "bg-primary text-white" : "bg-muted"}
                       >
                         {loan.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-warning font-medium">
-                      ₹
-                      {loan.totalInterest.toLocaleString(undefined, {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 4,
-                      })}
+                      ₹{loan.status === "પૂર્ણ" ? calculateInterest(loan.amount, loan.interestRate, loan.startDate).toLocaleString() : loan.totalInterest.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-destructive font-medium">
                       ₹{loan.remainingAmount.toLocaleString()}
@@ -425,6 +426,16 @@ export default function LoansPage() {
                         >
                           <Receipt className="h-4 w-4" />
                         </Button>
+                        {loan.status !== "પૂર્ણ" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCompleteLoan(loan.id)}
+                            className="border-warning text-warning hover:bg-warning hover:text-white"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -477,27 +488,45 @@ export default function LoansPage() {
                 </div>
                 <div className="p-3 bg-accent/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">તારીખ</Label>
-                  <p className="font-medium text-accent">{viewingLoan.startDate}</p>
+                  <p className="font-medium text-accent">{new Date(viewingLoan.startDate).toLocaleDateString('gu-IN')}</p>
                 </div>
                 <div className="p-3 bg-warning/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">કુલ વ્યાજ</Label>
                   <p className="font-medium text-warning">
-                    ₹
-                    {viewingLoan.totalInterest.toLocaleString(undefined, {
-                      minimumFractionDigits: 4,
-                      maximumFractionDigits: 4,
-                    })}
+                    ₹{viewingLoan.totalInterest.toLocaleString()}
                   </p>
                 </div>
                 <div className="p-3 bg-success/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">ચુકવેલ રકમ</Label>
                   <p className="font-medium text-success">₹{viewingLoan.paidAmount.toLocaleString()}</p>
                 </div>
-                <div className="p-3 bg-destructive/10 rounded-lg col-span-2">
+                <div className="p-3 bg-destructive/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">બાકી રકમ</Label>
                   <p className="font-medium text-destructive text-xl">
                     ₹{viewingLoan.remainingAmount.toLocaleString()}
                   </p>
+                </div>
+                <div className="p-3 bg-muted/10 rounded-lg">
+                  <Label className="text-sm text-muted-foreground">સ્થિતિ</Label>
+                  <Badge
+                    variant={viewingLoan.status === "સક્રિય" ? "default" : "outline"}
+                    className={viewingLoan.status === "સક્રિય" ? "bg-success" : "bg-primary text-white"}
+                  >
+                    {viewingLoan.status}
+                  </Badge>
+                  {viewingLoan.status !== "પૂર્ણ" && (
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        await handleCompleteLoan(viewingLoan.id)
+                        setViewingLoan(null)
+                      }}
+                      className="ml-2 bg-warning hover:bg-warning/90 text-white"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      પૂર્ણ કરો
+                    </Button>
+                  )}
                 </div>
                 <div className="p-3 bg-muted/10 rounded-lg col-span-2">
                   <Label className="text-sm text-muted-foreground">લોન આઇટમ</Label>
@@ -513,9 +542,43 @@ export default function LoansPage() {
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setViewingLoan(null)} className="bg-primary hover:bg-primary/90">
-              બંધ કરો
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => handleGenerateReceipt(viewingLoan)}
+                className="border-success text-success hover:bg-success hover:text-white"
+              >
+                <Receipt className="h-4 w-4 mr-2" />
+                રસીદ
+              </Button>
+              {viewingLoan?.status !== "પૂર્ણ" && (
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await handleCompleteLoan(viewingLoan.id)
+                    setViewingLoan(null)
+                  }}
+                  className="border-warning text-warning hover:bg-warning hover:text-white"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  પૂર્ણ કરો
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingLoan(viewingLoan)
+                  setViewingLoan(null)
+                }}
+                className="border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                સંપાદિત કરો
+              </Button>
+              <Button onClick={() => setViewingLoan(null)} className="bg-primary hover:bg-primary/90 ml-auto">
+                બંધ કરો
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
