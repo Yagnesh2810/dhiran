@@ -238,16 +238,25 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const customerRepayments = state.repayments.filter((repayment) => repayment.customerId === customer.id)
 
         const totalLoanAmount = customerLoans.reduce((sum, loan) => sum + loan.amount, 0)
-        // Recalculate total interest for each loan based on current time (skip completed loans)
+        
+        // Calculate total interest only for active loans
         const totalInterestAccrued = customerLoans.reduce(
-          (sum, loan) => sum + (loan.status === "પૂર્ણ" ? 0 : get().calculateInterest(loan.amount, loan.interestRate, loan.startDate)),
+          (sum, loan) => {
+            if (loan.status === "પૂર્ણ") return sum + 0
+            return sum + get().calculateInterest(loan.amount, loan.interestRate, loan.startDate)
+          },
           0,
         )
+        
         const paidAmount = customerRepayments.reduce((sum, repayment) => sum + repayment.amount, 0)
         const totalDiscountGiven = customerRepayments.reduce((sum, repayment) => sum + repayment.discountGiven, 0)
 
-        // Remaining amount considers both cash payments and discounts given
-        const remainingAmount = totalLoanAmount + totalInterestAccrued - (paidAmount + totalDiscountGiven)
+        // Calculate remaining amount properly
+        const activeLoansTotal = customerLoans
+          .filter(loan => loan.status !== "પૂર્ણ")
+          .reduce((sum, loan) => sum + loan.amount + get().calculateInterest(loan.amount, loan.interestRate, loan.startDate), 0)
+        
+        const remainingAmount = activeLoansTotal - (paidAmount + totalDiscountGiven)
 
         return {
           ...customer,
@@ -266,15 +275,27 @@ export const useAppStore = create<AppState>()((set, get) => ({
         // Don't calculate interest for completed loans
         const currentLoanInterest = loan.status === "પૂર્ણ" ? 0 : get().calculateInterest(loan.amount, loan.interestRate, loan.startDate)
 
-        // Remaining amount considers both cash payments and discounts given
-        const remainingAmount = loan.status === "પૂર્ણ" ? 0 : loan.amount + currentLoanInterest - (totalPaidForLoan + totalDiscountForLoan)
+        // For completed loans, everything should be zero
+        if (loan.status === "પૂર્ણ") {
+          return {
+            ...loan,
+            totalInterest: 0,
+            paidAmount: loan.amount, // Mark full principal as paid
+            remainingAmount: 0,
+            status: "પૂર્ણ",
+          }
+        }
+
+        // For active loans, calculate normally
+        const remainingAmount = loan.amount + currentLoanInterest - (totalPaidForLoan + totalDiscountForLoan)
+        const isCompleted = remainingAmount <= 0
 
         return {
           ...loan,
           totalInterest: currentLoanInterest,
           paidAmount: totalPaidForLoan,
-          remainingAmount: loan.status === "પૂર્ણ" ? 0 : Math.max(0, Math.ceil(remainingAmount)),
-          status: loan.status === "પૂર્ણ" ? "પૂર્ણ" : (remainingAmount <= 0 ? "પૂર્ણ" : "સક્રિય"),
+          remainingAmount: isCompleted ? 0 : Math.max(0, Math.ceil(remainingAmount)),
+          status: isCompleted ? "પૂર્ણ" : "સક્રિય",
         }
       })
 
@@ -684,12 +705,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
     const loanToComplete = state.loans.find((l) => l.id === id)
     if (!loanToComplete || loanToComplete.status === "પૂર્ણ") return
 
-    // Mark loan as completed with current paid amount, zero interest and remaining
+    // Mark loan as completed - zero out everything
     const dbUpdates: Partial<DatabaseLoan> = {
       status: "પૂર્ણ",
       total_interest: 0,
       remaining_amount: 0,
-      paid_amount: loanToComplete.amount, // Mark full principal as paid
+      paid_amount: loanToComplete.amount,
     }
 
     const existingHistoryIds = state.history.map((h) => h.id)
