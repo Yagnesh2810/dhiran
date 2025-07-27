@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAppStore } from "@/lib/store"
 import { useState, useMemo } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatAmount } from "@/lib/utils"
 
 export default function DashboardPage() {
   const { customers, loans, repayments, history, calculateAvailableFunds, addFundTransaction } = useAppStore()
@@ -76,7 +77,7 @@ export default function DashboardPage() {
   const totalInterestGenerated = filteredLoans.reduce((sum, loan) => sum + loan.totalInterest, 0)
 
   // Calculate pending interest (generated but not yet collected)
-  const pendingInterest = totalInterestGenerated - totalInterestEarned
+  const pendingInterest = Math.max(0, totalInterestGenerated - totalInterestEarned)
 
   // Calculate total discount given
   const totalDiscountGiven = filteredRepayments.reduce((sum, payment) => sum + payment.discountGiven, 0)
@@ -154,7 +155,7 @@ export default function DashboardPage() {
             <HandCoins className="h-4 w-4 text-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-secondary">₹{totalLoanGiven.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-secondary">₹{formatAmount(totalLoanGiven)}</div>
             <p className="text-xs text-muted-foreground">કુલ આપેલ લોન રકમ</p>
           </CardContent>
         </Card>
@@ -165,7 +166,7 @@ export default function DashboardPage() {
             <Banknote className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">₹{totalInterestEarned.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-warning">₹{formatAmount(totalInterestEarned)}</div>
             <p className="text-xs text-muted-foreground">વાસ્તવિક વ્યાજની આવક</p>
           </CardContent>
         </Card>
@@ -176,7 +177,7 @@ export default function DashboardPage() {
             <ReceiptText className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">₹{totalRepaid.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-success">₹{formatAmount(totalRepaid)}</div>
             <p className="text-xs text-muted-foreground">કુલ પરત મળેલ રકમ</p>
           </CardContent>
         </Card>
@@ -187,7 +188,7 @@ export default function DashboardPage() {
             <Banknote className="h-4 w-4 text-info" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-info">₹{pendingInterest.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-info">₹{formatAmount(pendingInterest)}</div>
             <p className="text-xs text-muted-foreground">બાકી વ્યાજ રકમ</p>
           </CardContent>
         </Card>
@@ -198,7 +199,7 @@ export default function DashboardPage() {
             <Wallet className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-accent">₹{availableFunds.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-accent">₹{formatAmount(availableFunds)}</div>
             <p className="text-xs text-muted-foreground">વર્તમાન ઉપલબ્ધ રકમ</p>
           </CardContent>
         </Card>
@@ -327,7 +328,7 @@ export default function DashboardPage() {
                       {activity.description}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {activity.date} - ₹{activity.amount.toLocaleString()}
+                      {activity.date} - ₹{formatAmount(activity.amount)}
                     </p>
                   </div>
                 </div>
@@ -365,23 +366,23 @@ export default function DashboardPage() {
             <div className="space-y-3">
               <div className="flex justify-between items-center p-2 bg-info/10 rounded">
                 <span className="text-sm">કુલ બાકી રકમ:</span>
-                <span className="font-bold text-info">₹{totalOutstanding.toLocaleString()}</span>
+                <span className="font-bold text-info">₹{formatAmount(totalOutstanding)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-success/10 rounded">
                 <span className="text-sm">કુલ વ્યાજ કમાણી:</span>
-                <span className="font-bold text-success">₹{totalInterestEarned.toLocaleString()}</span>
+                <span className="font-bold text-success">₹{formatAmount(totalInterestEarned)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-warning/10 rounded">
                 <span className="text-sm">બાકી વ્યાજ:</span>
-                <span className="font-bold text-warning">₹{pendingInterest.toLocaleString()}</span>
+                <span className="font-bold text-warning">₹{formatAmount(pendingInterest)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-destructive/10 rounded">
                 <span className="text-sm">કુલ છૂટ આપેલ:</span>
-                <span className="font-bold text-destructive">₹{totalDiscountGiven.toLocaleString()}</span>
+                <span className="font-bold text-destructive">₹{formatAmount(totalDiscountGiven)}</span>
               </div>
               <div className="flex justify-between items-center p-2 bg-primary/10 rounded">
                 <span className="text-sm">ઉપલબ્ધ રકમ:</span>
-                <span className="font-bold text-primary">₹{availableFunds.toLocaleString()}</span>
+                <span className="font-bold text-primary">₹{formatAmount(availableFunds)}</span>
               </div>
             </div>
           </CardContent>
@@ -415,7 +416,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex justify-between items-center p-2 bg-info/10 rounded">
                 <span className="text-sm">કુલ વ્યાજ જનરેટ:</span>
-                <span className="font-bold text-info">₹{totalInterestGenerated.toLocaleString()}</span>
+                <span className="font-bold text-info">₹{formatAmount(totalInterestGenerated)}</span>
               </div>
             </div>
           </CardContent>

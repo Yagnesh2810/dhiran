@@ -26,6 +26,7 @@ import { ImageUpload } from "@/components/ui/image-upload"
 import { uploadVerificationImage } from "@/lib/supabase/database" // Import the Supabase upload function
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { generateReceiptPrint } from "@/lib/pdf-utils" // Import receipt print utility
+import { formatAmount } from "@/lib/utils"
 
 export default function RepaymentsPage() {
   const { customers, repayments, addRepayment, updateRepayment, deleteRepayment, loans, calculateInterest } =
@@ -364,7 +365,7 @@ export default function RepaymentsPage() {
             <ReceiptText className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">₹{totalRepaymentAmount.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-success">₹{formatAmount(totalRepaymentAmount)}</div>
             <p className="text-xs text-muted-foreground">કુલ પરત મળેલ રકમ</p>
           </CardContent>
         </Card>
@@ -376,8 +377,7 @@ export default function RepaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">
-              ₹
-              {totalInterestCollected.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
+              ₹{formatAmount(totalInterestCollected)}
             </div>
             <p className="text-xs text-muted-foreground">વાસ્તવિક વ્યાજની આવક</p>
           </CardContent>
@@ -389,7 +389,7 @@ export default function RepaymentsPage() {
             <Banknote className="h-4 w-4 text-info" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-info">₹{totalDiscountGiven.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-info">₹{formatAmount(totalDiscountGiven)}</div>
             <p className="text-xs text-muted-foreground">કુલ આપેલ છૂટ</p>
           </CardContent>
         </Card>
@@ -400,7 +400,7 @@ export default function RepaymentsPage() {
             <Wallet className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">₹{totalOutstandingLoans.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-destructive">₹{formatAmount(totalOutstandingLoans)}</div>
             <p className="text-xs text-muted-foreground">ગ્રાહકો પાસેથી બાકી રકમ</p>
           </CardContent>
         </Card>
@@ -424,15 +424,11 @@ export default function RepaymentsPage() {
             {repayments.map((repayment) => (
               <TableRow key={repayment.id}>
                 <TableCell className="font-medium">{repayment.customerName}</TableCell>
-                <TableCell>₹{repayment.amount.toLocaleString()}</TableCell>
+                <TableCell>₹{formatAmount(repayment.amount)}</TableCell>
                 <TableCell>
-                  ₹
-                  {repayment.interestInfo.toLocaleString(undefined, {
-                    minimumFractionDigits: 4,
-                    maximumFractionDigits: 4,
-                  })}
+                  ₹{formatAmount(repayment.interestInfo)}
                 </TableCell>
-                <TableCell>₹{repayment.discountGiven.toLocaleString()}</TableCell>
+                <TableCell>₹{formatAmount(repayment.discountGiven)}</TableCell>
                 <TableCell>{repayment.date}</TableCell>
                 <TableCell>{repayment.receiptId}</TableCell>
                 <TableCell>{repayment.notes || "N/A"}</TableCell>
@@ -612,17 +608,13 @@ export default function RepaymentsPage() {
                 <span className="font-medium">ગ્રાહકનું નામ:</span>
                 <span>{currentRepayment.customerName}</span>
                 <span className="font-medium">રકમ:</span>
-                <span>₹{currentRepayment.amount.toLocaleString()}</span>
+                <span>₹{formatAmount(currentRepayment.amount)}</span>
                 <span className="font-medium">વ્યાજ માહિતી:</span>
                 <span>
-                  ₹
-                  {currentRepayment.interestInfo.toLocaleString(undefined, {
-                    minimumFractionDigits: 4,
-                    maximumFractionDigits: 4,
-                  })}
+                  ₹{formatAmount(currentRepayment.interestInfo)}
                 </span>
                 <span className="font-medium">છૂટ આપેલ:</span>
-                <span>₹{currentRepayment.discountGiven.toLocaleString()}</span>
+                <span>₹{formatAmount(currentRepayment.discountGiven)}</span>
                 <span className="font-medium">ચુકવણી તારીખ:</span>
                 <span>{currentRepayment.date}</span>
                 <span className="font-medium">રસીદ ID:</span>

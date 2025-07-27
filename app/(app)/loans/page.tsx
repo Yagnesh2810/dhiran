@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Plus, Calculator, Eye, Receipt, Edit, Trash2, Printer, CheckCircle } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { generateLoansPrint, generateReceiptPrint } from "@/lib/pdf-utils"
+import { formatAmount } from "@/lib/utils"
 
 export default function LoansPage() {
   const { loans, customers, addLoan, updateLoan, deleteLoan, completeLoan, calculateInterest } = useAppStore()
@@ -155,7 +156,7 @@ export default function LoansPage() {
             <CardTitle className="text-sm font-medium text-accent">કુલ લોન રકમ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-secondary">₹{totalLoanAmount.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-secondary">₹{formatAmount(totalLoanAmount)}</div>
             <p className="text-xs text-muted-foreground">કુલ આપેલ લોન રકમ</p>
           </CardContent>
         </Card>
@@ -165,7 +166,7 @@ export default function LoansPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">
-              ₹{totalInterest.toLocaleString()}
+              ₹{formatAmount(totalInterest)}
             </div>
             <p className="text-xs text-muted-foreground">કુલ જનરેટ થયેલ વ્યાજ</p>
           </CardContent>
@@ -175,7 +176,7 @@ export default function LoansPage() {
             <CardTitle className="text-sm font-medium text-accent">બાકી રકમ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">₹{totalRemaining.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-destructive">₹{formatAmount(totalRemaining)}</div>
             <p className="text-xs text-muted-foreground">કુલ બાકી લોન રકમ</p>
           </CardContent>
         </Card>
@@ -240,14 +241,14 @@ export default function LoansPage() {
                       <div className="p-4 bg-warning/10 rounded-lg space-y-2">
                         <h4 className="font-medium text-warning">પરિણામ:</h4>
                         <div className="text-sm space-y-1">
-                          <p>મૂળધન: ₹{calculatorResult.principal.toLocaleString()}</p>
+                          <p>મૂળધન: ₹{formatAmount(calculatorResult.principal)}</p>
                           <p>વ્યાજ દર: {calculatorResult.rate}% (વાર્ષિક)</p>
                           <p>મિનિટો: {calculatorResult.minutes.toFixed(2)}</p>
                           <p>
-                            વ્યાજ: ₹{Math.ceil(calculatorResult.interest).toLocaleString()}
+                            વ્યાજ: ₹{formatAmount(calculatorResult.interest)}
                           </p>
                           <p className="font-bold">
-                            કુલ રકમ: ₹{Math.ceil(calculatorResult.total).toLocaleString()}
+                            કુલ રકમ: ₹{formatAmount(calculatorResult.total)}
                           </p>
                         </div>
                       </div>
@@ -391,7 +392,7 @@ export default function LoansPage() {
                         <div className="text-sm text-muted-foreground">{loan.customerId}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-secondary font-medium">₹{loan.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-secondary font-medium">₹{formatAmount(loan.amount)}</TableCell>
                     <TableCell className="text-info font-medium">{loan.interestRate}%</TableCell>
                     <TableCell>{loan.startDate}</TableCell>
                     <TableCell>
@@ -403,10 +404,10 @@ export default function LoansPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-warning font-medium">
-                      ₹{loan.status === "પૂર્ણ" ? calculateInterest(loan.amount, loan.interestRate, loan.startDate).toLocaleString() : loan.totalInterest.toLocaleString()}
+                      ₹{loan.status === "પૂર્ણ" ? formatAmount(calculateInterest(loan.amount, loan.interestRate, loan.startDate)) : formatAmount(loan.totalInterest)}
                     </TableCell>
                     <TableCell className="text-destructive font-medium">
-                      ₹{loan.remainingAmount.toLocaleString()}
+                      ₹{formatAmount(loan.remainingAmount)}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-1">
@@ -480,7 +481,7 @@ export default function LoansPage() {
                 </div>
                 <div className="p-3 bg-secondary/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">લોન રકમ</Label>
-                  <p className="font-medium text-secondary">₹{viewingLoan.amount.toLocaleString()}</p>
+                  <p className="font-medium text-secondary">₹{formatAmount(viewingLoan.amount)}</p>
                 </div>
                 <div className="p-3 bg-info/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">વ્યાજ દર</Label>
@@ -493,17 +494,17 @@ export default function LoansPage() {
                 <div className="p-3 bg-warning/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">કુલ વ્યાજ</Label>
                   <p className="font-medium text-warning">
-                    ₹{viewingLoan.totalInterest.toLocaleString()}
+                    ₹{formatAmount(viewingLoan.totalInterest)}
                   </p>
                 </div>
                 <div className="p-3 bg-success/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">ચુકવેલ રકમ</Label>
-                  <p className="font-medium text-success">₹{viewingLoan.paidAmount.toLocaleString()}</p>
+                  <p className="font-medium text-success">₹{formatAmount(viewingLoan.paidAmount)}</p>
                 </div>
                 <div className="p-3 bg-destructive/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">બાકી રકમ</Label>
                   <p className="font-medium text-destructive text-xl">
-                    ₹{viewingLoan.remainingAmount.toLocaleString()}
+                    ₹{formatAmount(viewingLoan.remainingAmount)}
                   </p>
                 </div>
                 <div className="p-3 bg-muted/10 rounded-lg">

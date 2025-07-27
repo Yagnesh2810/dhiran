@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAppStore } from "@/lib/store"
 import { generatePrintableContent } from "@/lib/pdf-utils"
 import { generateCustomersExcel, generateLoansExcel, generateRepaymentsExcel } from "@/lib/excel-utils"
+import { formatAmount } from "@/lib/utils"
 
 export default function ReportsPage() {
   const { customers, loans, repayments, history } = useAppStore()
@@ -95,18 +96,18 @@ export default function ReportsPage() {
     if (generatedReport.loans) {
       content += `લોન વિગતો:\n`
       generatedReport.loans.forEach((loan: any, index: number) => {
-        content += `${index + 1}. ${loan.id} - ₹${loan.amount.toLocaleString()} (${loan.startDate})\n`
+        content += `${index + 1}. ${loan.id} - ₹${formatAmount(loan.amount)} (${loan.startDate})\n`
       })
-      content += `\nકુલ લોન: ₹${generatedReport.totalLoansGiven?.toLocaleString() || 0}\n\n`
+      content += `\nકુલ લોન: ₹${formatAmount(generatedReport.totalLoansGiven || 0)}\n\n`
     }
 
     if (generatedReport.repayments) {
       content += `ચુકવણી વિગતો:\n`
       generatedReport.repayments.forEach((repayment: any, index: number) => {
-        content += `${index + 1}. ${repayment.id} - ₹${repayment.amount.toLocaleString()} (${repayment.date})\n`
+        content += `${index + 1}. ${repayment.id} - ₹${formatAmount(repayment.amount)} (${repayment.date})\n`
       })
-      content += `\nકુલ ચુકવણી: ₹${generatedReport.totalRepayments?.toLocaleString() || 0}\n`
-      content += `કુલ વ્યાજ: ₹${generatedReport.totalInterestEarned?.toLocaleString() || 0}\n\n`
+      content += `\nકુલ ચુકવણી: ₹${formatAmount(generatedReport.totalRepayments || 0)}\n`
+      content += `કુલ વ્યાજ: ₹${formatAmount(generatedReport.totalInterestEarned || 0)}\n\n`
     }
 
     generatePrintableContent(content, generatedReport.title)
@@ -403,25 +404,25 @@ export default function ReportsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-primary/10 rounded-lg">
                 <div className="text-2xl font-bold text-primary">
-                  ₹{loans.reduce((sum, loan) => sum + loan.amount, 0).toLocaleString()}
+                  ₹{formatAmount(loans.reduce((sum, loan) => sum + loan.amount, 0))}
                 </div>
                 <div className="text-sm text-muted-foreground">કુલ લોન આપેલ</div>
               </div>
               <div className="text-center p-4 bg-secondary/10 rounded-lg">
                 <div className="text-2xl font-bold text-secondary">
-                  ₹{repayments.reduce((sum, payment) => sum + payment.interestInfo, 0).toLocaleString()}
+                  ₹{formatAmount(repayments.reduce((sum, payment) => sum + payment.interestInfo, 0))}
                 </div>
                 <div className="text-sm text-muted-foreground">કુલ વ્યાજ મળેલ</div>
               </div>
               <div className="text-center p-4 bg-warning/10 rounded-lg">
                 <div className="text-2xl font-bold text-warning">
-                  ₹{repayments.reduce((sum, payment) => sum + payment.amount, 0).toLocaleString()}
+                  ₹{formatAmount(repayments.reduce((sum, payment) => sum + payment.amount, 0))}
                 </div>
                 <div className="text-sm text-muted-foreground">કુલ ચુકવણી</div>
               </div>
               <div className="text-center p-4 bg-destructive/10 rounded-lg">
                 <div className="text-2xl font-bold text-destructive">
-                  ₹{loans.reduce((sum, loan) => sum + loan.remainingAmount, 0).toLocaleString()}
+                  ₹{formatAmount(loans.reduce((sum, loan) => sum + loan.remainingAmount, 0))}
                 </div>
                 <div className="text-sm text-muted-foreground">બાકી રકમ</div>
               </div>
@@ -469,7 +470,7 @@ export default function ReportsPage() {
               {generatedReport.totalLoansGiven !== undefined && (
                 <div className="text-center p-4 bg-secondary/10 rounded-lg">
                   <div className="text-xl font-bold text-secondary">
-                    ₹{generatedReport.totalLoansGiven.toLocaleString()}
+                    ₹{formatAmount(generatedReport.totalLoansGiven)}
                   </div>
                   <div className="text-sm text-muted-foreground">કુલ લોન આપેલ</div>
                 </div>
@@ -477,7 +478,7 @@ export default function ReportsPage() {
               {generatedReport.totalRepayments !== undefined && (
                 <div className="text-center p-4 bg-success/10 rounded-lg">
                   <div className="text-xl font-bold text-success">
-                    ₹{generatedReport.totalRepayments.toLocaleString()}
+                    ₹{formatAmount(generatedReport.totalRepayments)}
                   </div>
                   <div className="text-sm text-muted-foreground">કુલ ચુકવણી</div>
                 </div>
@@ -485,7 +486,7 @@ export default function ReportsPage() {
               {generatedReport.totalInterestEarned !== undefined && (
                 <div className="text-center p-4 bg-warning/10 rounded-lg">
                   <div className="text-xl font-bold text-warning">
-                    ₹{generatedReport.totalInterestEarned.toLocaleString()}
+                    ₹{formatAmount(generatedReport.totalInterestEarned)}
                   </div>
                   <div className="text-sm text-muted-foreground">કુલ વ્યાજ</div>
                 </div>
@@ -493,7 +494,7 @@ export default function ReportsPage() {
               {generatedReport.totalDiscountGiven !== undefined && (
                 <div className="text-center p-4 bg-info/10 rounded-lg">
                   <div className="text-xl font-bold text-info">
-                    ₹{generatedReport.totalDiscountGiven.toLocaleString()}
+                    ₹{formatAmount(generatedReport.totalDiscountGiven)}
                   </div>
                   <div className="text-sm text-muted-foreground">કુલ છૂટ આપેલ</div>
                 </div>
@@ -519,7 +520,7 @@ export default function ReportsPage() {
                         <TableRow key={loan.id}>
                           <TableCell className="font-medium">{loan.id}</TableCell>
                           <TableCell>{loan.customerName}</TableCell>
-                          <TableCell>₹{loan.amount.toLocaleString()}</TableCell>
+                          <TableCell>₹{formatAmount(loan.amount)}</TableCell>
                           <TableCell>{loan.startDate}</TableCell>
                           <TableCell>{loan.status}</TableCell>
                         </TableRow>
@@ -549,8 +550,8 @@ export default function ReportsPage() {
                         <TableRow key={repayment.id}>
                           <TableCell className="font-medium">{repayment.id}</TableCell>
                           <TableCell>{repayment.customerName}</TableCell>
-                          <TableCell>₹{repayment.amount.toLocaleString()}</TableCell>
-                          <TableCell>₹{repayment.interestInfo.toLocaleString()}</TableCell>
+                          <TableCell>₹{formatAmount(repayment.amount)}</TableCell>
+                          <TableCell>₹{formatAmount(repayment.interestInfo)}</TableCell>
                           <TableCell>{repayment.date}</TableCell>
                         </TableRow>
                       ))}
@@ -589,9 +590,9 @@ export default function ReportsPage() {
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium text-primary">{customer.id}</TableCell>
                     <TableCell>{customer.name}</TableCell>
-                    <TableCell className="text-secondary">₹{customer.totalLoanAmount.toLocaleString()}</TableCell>
-                    <TableCell className="text-success">₹{customer.paidAmount.toLocaleString()}</TableCell>
-                    <TableCell className="text-destructive">₹{customer.remainingAmount.toLocaleString()}</TableCell>
+                    <TableCell className="text-secondary">₹{formatAmount(customer.totalLoanAmount)}</TableCell>
+                    <TableCell className="text-success">₹{formatAmount(customer.paidAmount)}</TableCell>
+                    <TableCell className="text-destructive">₹{formatAmount(customer.remainingAmount)}</TableCell>
                     <TableCell>
                       <span className={customer.remainingAmount > 0 ? "text-warning" : "text-success"}>
                         {customer.remainingAmount > 0 ? "બાકી" : "પૂર્ણ"}

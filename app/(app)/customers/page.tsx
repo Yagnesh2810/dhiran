@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Plus, Edit, Trash2, Search, Eye, HandCoins, Receipt, FileText } from "lucide-react"
 import { useAppStore } from "@/lib/store"
 import { generateCustomersPrint, generateCustomerReceiptPrint } from "@/lib/pdf-utils"
+import { formatAmount } from "@/lib/utils"
 
 export default function CustomersPage() {
   const {
@@ -263,9 +264,10 @@ export default function CustomersPage() {
               </TableHeader>
               <TableBody>
                 {filteredCustomers.map((customer, index) => {
-                  const remainingInterest =
+                  const remainingInterest = Math.max(0,
                     customer.totalInterest -
                     repayments.filter((r) => r.customerId === customer.id).reduce((sum, r) => sum + r.interestInfo, 0)
+                  )
 
                   return (
                     <TableRow key={customer.id} className={index % 2 === 0 ? "bg-muted/20" : ""}>
@@ -274,9 +276,9 @@ export default function CustomersPage() {
                       <TableCell>{customer.city}</TableCell>
                       <TableCell>{customer.mobile}</TableCell>
                       <TableCell className="text-destructive font-medium">
-                        ₹{customer.remainingAmount.toLocaleString()}
+                        ₹{formatAmount(customer.remainingAmount)}
                       </TableCell>
-                      <TableCell className="text-warning font-medium">₹{remainingInterest.toLocaleString()}</TableCell>
+                      <TableCell className="text-warning font-medium">₹{formatAmount(remainingInterest)}</TableCell>
                       <TableCell>
                         <div className="flex space-x-1">
                           <Button
@@ -358,17 +360,17 @@ export default function CustomersPage() {
                 <div className="p-3 bg-warning/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">કુલ લોન રકમ</Label>
                   <p className="font-medium text-warning text-xl">
-                    ₹{viewingCustomer.totalLoanAmount.toLocaleString()}
+                    ₹{formatAmount(viewingCustomer.totalLoanAmount)}
                   </p>
                 </div>
                 <div className="p-3 bg-success/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">ચુકવેલ રકમ</Label>
-                  <p className="font-medium text-success text-xl">₹{viewingCustomer.paidAmount.toLocaleString()}</p>
+                  <p className="font-medium text-success text-xl">₹{formatAmount(viewingCustomer.paidAmount)}</p>
                 </div>
                 <div className="p-3 bg-destructive/10 rounded-lg">
                   <Label className="text-sm text-muted-foreground">બાકી રકમ</Label>
                   <p className="font-medium text-destructive text-xl">
-                    ₹{viewingCustomer.remainingAmount.toLocaleString()}
+                    ₹{formatAmount(viewingCustomer.remainingAmount)}
                   </p>
                 </div>
               </div>
@@ -392,11 +394,11 @@ export default function CustomersPage() {
                       {getCustomerLoans(viewingCustomer.id).map((loan) => (
                         <TableRow key={loan.id}>
                           <TableCell className="font-medium">{loan.id}</TableCell>
-                          <TableCell>₹{loan.amount.toLocaleString()}</TableCell>
+                          <TableCell>₹{formatAmount(loan.amount)}</TableCell>
                           <TableCell>{loan.interestRate}%</TableCell>
                           <TableCell>{loan.startDate}</TableCell>
-                          <TableCell>₹{loan.totalInterest.toLocaleString()}</TableCell>
-                          <TableCell>₹{loan.remainingAmount.toLocaleString()}</TableCell>
+                          <TableCell>₹{formatAmount(loan.totalInterest)}</TableCell>
+                          <TableCell>₹{formatAmount(loan.remainingAmount)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -422,8 +424,8 @@ export default function CustomersPage() {
                       {getCustomerRepayments(viewingCustomer.id).map((repayment) => (
                         <TableRow key={repayment.id}>
                           <TableCell className="font-medium">{repayment.id}</TableCell>
-                          <TableCell>₹{repayment.amount.toLocaleString()}</TableCell>
-                          <TableCell>₹{repayment.interestInfo.toLocaleString()}</TableCell>
+                          <TableCell>₹{formatAmount(repayment.amount)}</TableCell>
+                          <TableCell>₹{formatAmount(repayment.interestInfo)}</TableCell>
                           <TableCell>{repayment.date}</TableCell>
                           <TableCell>{repayment.receiptId}</TableCell>
                         </TableRow>
@@ -626,10 +628,10 @@ export default function CustomersPage() {
               <div className="p-4 bg-info/10 rounded-lg">
                 <h4 className="font-medium mb-2 text-info">વર્તમાન સ્થિતિ</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>કુલ લોન: ₹{addingPaymentCustomer.totalLoanAmount.toLocaleString()}</div>
-                  <div>કુલ વ્યાજ: ₹{addingPaymentCustomer.totalInterest.toLocaleString()}</div>
-                  <div>ચુકવેલ: ₹{addingPaymentCustomer.paidAmount.toLocaleString()}</div>
-                  <div>બાકી: ₹{addingPaymentCustomer.remainingAmount.toLocaleString()}</div>
+                  <div>કુલ લોન: ₹{formatAmount(addingPaymentCustomer.totalLoanAmount)}</div>
+                  <div>કુલ વ્યાજ: ₹{formatAmount(addingPaymentCustomer.totalInterest)}</div>
+                  <div>ચુકવેલ: ₹{formatAmount(addingPaymentCustomer.paidAmount)}</div>
+                  <div>બાકી: ₹{formatAmount(addingPaymentCustomer.remainingAmount)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

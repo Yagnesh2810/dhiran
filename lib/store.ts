@@ -254,7 +254,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
           totalLoanAmount,
           totalInterest: totalInterestAccrued, // Whole number
           paidAmount,
-          remainingAmount: Math.ceil(remainingAmount), // Round up to next whole number
+          remainingAmount: Math.max(0, Math.ceil(remainingAmount)), // Ensure never negative
         }
       })
 
@@ -273,7 +273,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
           ...loan,
           totalInterest: currentLoanInterest,
           paidAmount: totalPaidForLoan,
-          remainingAmount: loan.status === "પૂર્ણ" ? 0 : Math.ceil(remainingAmount),
+          remainingAmount: loan.status === "પૂર્ણ" ? 0 : Math.max(0, Math.ceil(remainingAmount)),
           status: loan.status === "પૂર્ણ" ? "પૂર્ણ" : (remainingAmount <= 0 ? "પૂર્ણ" : "સક્રિય"),
         }
       })

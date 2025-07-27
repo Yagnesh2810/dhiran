@@ -20,6 +20,7 @@ import {
 import { useAppStore } from "@/lib/store"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { generateHistoryExcel, generateFundHistoryExcel } from "@/lib/excel-utils"
+import { formatAmount } from "@/lib/utils"
 
 export default function HistoryPage() {
   const { history, customers } = useAppStore()
@@ -84,7 +85,7 @@ ${filteredHistory
 ${index + 1}. ID: ${item.id}
    પ્રકાર: ${item.type}
    ગ્રાહક: ${item.customerName || "સિસ્ટમ"}
-   રકમ: ₹${item.amount.toLocaleString()}
+   રકમ: ₹${formatAmount(item.amount)}
    તારીખ: ${item.date}
    સ્થિતિ: ${item.status}
    વર્ણન: ${item.description}
@@ -94,7 +95,7 @@ ${index + 1}. ID: ${item.id}
   .join("")}
 
 કુલ એન્ટ્રીઓ: ${filteredHistory.length}
-કુલ રકમ: ₹${filteredHistory.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
+કુલ રકમ: ₹${formatAmount(filteredHistory.reduce((sum, item) => sum + item.amount, 0))}
     `
 
     const printWindow = window.open("", "_blank")
@@ -199,7 +200,7 @@ ${fundHistory
     (item, index) => `
 ${index + 1}. ID: ${item.id}
    પ્રકાર: ${item.type}
-   રકમ: ₹${item.amount.toLocaleString()}
+   રકમ: ₹${formatAmount(item.amount)}
    તારીખ: ${item.date}
    સ્થિતિ: ${item.status}
    વર્ણન: ${item.description}
@@ -209,7 +210,7 @@ ${index + 1}. ID: ${item.id}
   .join("")}
 
 કુલ એન્ટ્રીઓ: ${fundHistory.length}
-કુલ રકમ: ₹${fundHistory.reduce((sum, item) => sum + (item.type === "ભંડોળ ઉમેર્યું" ? item.amount : -item.amount), 0).toLocaleString()}
+કુલ રકમ: ₹${formatAmount(fundHistory.reduce((sum, item) => sum + (item.type === "ભંડોળ ઉમેર્યું" ? item.amount : -item.amount), 0))}
     `
 
     const printWindow = window.open("", "_blank")
@@ -417,7 +418,7 @@ ${index + 1}. ID: ${item.id}
                           {item.description}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {item.date} - ₹{item.amount.toLocaleString()}
+                          {item.date} - ₹{formatAmount(item.amount)}
                         </p>
                       </div>
                     </div>
@@ -448,7 +449,7 @@ ${index + 1}. ID: ${item.id}
                             {item.description}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {item.date} - ₹{item.amount.toLocaleString()}
+                            {item.date} - ₹{formatAmount(item.amount)}
                           </p>
                         </div>
                       </div>
@@ -476,7 +477,7 @@ ${index + 1}. ID: ${item.id}
                         <div>
                           <p className="font-medium">{item.description}</p>
                           <p className="text-sm text-muted-foreground">
-                            {item.date} - ₹{item.amount.toLocaleString()}
+                            {item.date} - ₹{formatAmount(item.amount)}
                           </p>
                         </div>
                       </div>
