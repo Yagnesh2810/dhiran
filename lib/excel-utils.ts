@@ -19,7 +19,7 @@ export const generateExcelData = (data: any[], headers: string[], filename: stri
   ].join("\n")
 
   // Create blob and download
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob([csvContent], { type: "application/octet-stream" })
   const link = document.createElement("a")
 
   if (link.download !== undefined) {
@@ -47,7 +47,7 @@ export const generateHistoryExcel = (history: any[]) => {
     item.description,
   ])
 
-  generateExcelData(data, headers, "dhiran_history_report")
+  generateExcelData(data, headers, "history_report")
 }
 
 export const generateCustomersExcel = (customers: any[]) => {
@@ -75,17 +75,18 @@ export const generateCustomersExcel = (customers: any[]) => {
     customer.loanItem,
   ])
 
-  generateExcelData(data, headers, "dhiran_customers_report")
+  generateExcelData(data, headers, "customers_report")
 }
 
 export const generateLoansExcel = (loans: any[]) => {
   const headers = [
-    "Loan_ID",
+    "ID",
     "Customer_ID",
     "Customer_Name",
     "Amount",
     "Interest_Rate",
     "Start_Date",
+    "Reference_Number",
     "Status",
     "Total_Interest",
     "Paid_Amount",
@@ -100,6 +101,7 @@ export const generateLoansExcel = (loans: any[]) => {
     loan.amount,
     loan.interestRate,
     loan.startDate,
+    loan.referenceNumber || "-",
     loan.status,
     loan.totalInterest,
     loan.paidAmount,
@@ -107,12 +109,12 @@ export const generateLoansExcel = (loans: any[]) => {
     loan.loanItem,
   ])
 
-  generateExcelData(data, headers, "dhiran_loans_report")
+  generateExcelData(data, headers, "report")
 }
 
 export const generateRepaymentsExcel = (repayments: any[]) => {
   const headers = [
-    "Payment_ID",
+    "ID",
     "Customer_ID",
     "Customer_Name",
     "Amount",
@@ -135,7 +137,7 @@ export const generateRepaymentsExcel = (repayments: any[]) => {
     repayment.notes,
   ])
 
-  generateExcelData(data, headers, "dhiran_repayments_report")
+  generateExcelData(data, headers, "repayments_report")
 }
 
 export const generateFundHistoryExcel = (history: any[]) => {
@@ -152,5 +154,5 @@ export const generateFundHistoryExcel = (history: any[]) => {
     item.description,
   ])
 
-  generateExcelData(data, headers, "dhiran_fund_history_report")
+  generateExcelData(data, headers, "fund_history_report")
 }

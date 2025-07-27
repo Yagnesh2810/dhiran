@@ -123,9 +123,7 @@ export default function LoginPage() {
               {isLoading ? "લૉગ ઇન કરી રહ્યા છીએ..." : "લૉગ ઇન કરો"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>ડેમો લૉગિન: admin@dhiran.com / admin123</p>
-          </div>
+
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
           એકાઉન્ટ નથી?{" "}

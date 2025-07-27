@@ -43,6 +43,7 @@ export default function LoansPage() {
       status: "સક્રિય",
       loanItem: formData.get("loanItem") as string,
       notes: formData.get("notes") as string,
+      referenceNumber: formData.get("referenceNumber") as string,
     })
 
     setIsAddDialogOpen(false)
@@ -55,6 +56,7 @@ export default function LoansPage() {
       startDate: formData.get("startDate") as string,
       loanItem: formData.get("loanItem") as string,
       notes: formData.get("notes") as string,
+      referenceNumber: formData.get("referenceNumber") as string,
     })
 
     setEditingLoan(null)
@@ -342,6 +344,15 @@ export default function LoansPage() {
                           className="border-primary/30 focus:border-primary"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="referenceNumber">રેફરન્સ નંબર</Label>
+                        <Input
+                          id="referenceNumber"
+                          name="referenceNumber"
+                          placeholder="વૈકલ્પિક રેફરન્સ નંબર"
+                          className="border-primary/30 focus:border-primary"
+                        />
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="notes">નોંધ</Label>
@@ -376,6 +387,7 @@ export default function LoansPage() {
                   <TableHead className="font-semibold">રકમ</TableHead>
                   <TableHead className="font-semibold">વ્યાજ દર</TableHead>
                   <TableHead className="font-semibold">તારીખ</TableHead>
+                  <TableHead className="font-semibold">રેફરન્સ</TableHead>
                   <TableHead className="font-semibold">સ્થિતિ</TableHead>
                   <TableHead className="font-semibold">કુલ વ્યાજ</TableHead>
                   <TableHead className="font-semibold">બાકી રકમ</TableHead>
@@ -395,6 +407,9 @@ export default function LoansPage() {
                     <TableCell className="text-secondary font-medium">₹{formatAmount(loan.amount)}</TableCell>
                     <TableCell className="text-info font-medium">{loan.interestRate}%</TableCell>
                     <TableCell>{loan.startDate}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {loan.referenceNumber || "-"}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={loan.status === "સક્રિય" ? "default" : loan.status === "પૂર્ણ" ? "outline" : "secondary"}
@@ -533,6 +548,12 @@ export default function LoansPage() {
                   <Label className="text-sm text-muted-foreground">લોન આઇટમ</Label>
                   <p className="font-medium">{viewingLoan.loanItem}</p>
                 </div>
+                {viewingLoan.referenceNumber && (
+                  <div className="p-3 bg-muted/10 rounded-lg col-span-2">
+                    <Label className="text-sm text-muted-foreground">રેફરન્સ નંબર</Label>
+                    <p className="font-medium">{viewingLoan.referenceNumber}</p>
+                  </div>
+                )}
                 {viewingLoan.notes && (
                   <div className="p-3 bg-muted/10 rounded-lg col-span-2">
                     <Label className="text-sm text-muted-foreground">નોંધ</Label>
@@ -635,6 +656,16 @@ export default function LoansPage() {
                     name="loanItem"
                     defaultValue={editingLoan.loanItem}
                     required
+                    className="border-primary/30 focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-referenceNumber">રેફરન્સ નંબર</Label>
+                  <Input
+                    id="edit-referenceNumber"
+                    name="referenceNumber"
+                    defaultValue={editingLoan.referenceNumber || ""}
+                    placeholder="વૈકલ્પિક રેફરન્સ નંબર"
                     className="border-primary/30 focus:border-primary"
                   />
                 </div>

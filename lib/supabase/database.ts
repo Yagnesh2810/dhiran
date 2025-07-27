@@ -30,6 +30,7 @@ export interface DatabaseLoan {
   remaining_amount: number
   loan_item: string
   notes: string
+  reference_number?: string
   created_at?: string
   updated_at?: string
 }
@@ -291,6 +292,7 @@ export const convertDatabaseLoanToApp = (dbLoan: DatabaseLoan) => ({
   remainingAmount: dbLoan.remaining_amount,
   loanItem: dbLoan.loan_item,
   notes: dbLoan.notes || "",
+  referenceNumber: dbLoan.reference_number || "",
 })
 
 export const convertAppLoanToDatabase = (appLoan: any): Omit<DatabaseLoan, "created_at" | "updated_at"> => ({
@@ -306,6 +308,7 @@ export const convertAppLoanToDatabase = (appLoan: any): Omit<DatabaseLoan, "crea
   remaining_amount: appLoan.remainingAmount,
   loan_item: appLoan.loanItem,
   notes: appLoan.notes || "",
+  reference_number: appLoan.referenceNumber || null,
 })
 
 export const convertDatabaseRepaymentToApp = (dbRepayment: DatabaseRepayment) => ({

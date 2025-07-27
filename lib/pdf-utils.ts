@@ -112,13 +112,13 @@ export const generateReceiptPrint = (data: any) => {
   if (isLoanReceipt) {
     // Loan Receipt Format - Thermal Printer Optimized
     content = `
-<div class="thermal-header">લોન રસીદ</div>
+<div class="thermal-header">રસીદ</div>
 
 <div class="thermal-amount">રકમ: ₹${data.amount.toLocaleString()}</div>
 
 તારીખ: ${data.date}
 
-લોન આઇટમ: ${data.loanItem || "ધિરાણ"}
+આઇટમ: ${data.loanItem || "ધિરાણ"}
 
 ID: ${data.loanId}
 
@@ -158,7 +158,7 @@ ${data.notes ? `<div class="notes"><b>નોંધ:</b><br>${data.notes}</div>` 
 
   generatePrintableContent(
     content,
-    isLoanReceipt ? `લોન રસીદ ${data.loanId}` : `રસીદ ${data.receiptId}`,
+    isLoanReceipt ? `રસીદ ${data.loanId}` : `રસીદ ${data.receiptId}`,
     true,
   )
 }
@@ -168,20 +168,21 @@ export const generateCustomerReceiptPrint = (customer: any, loans: any[], repaym
 <div class="header-info">
 <strong>ગ્રાહક રિપોર્ટ</strong><br>
 તારીખ: ${new Date().toLocaleDateString("gu-IN")}<br>
-ધિરાણ આઇટમ: ધિરાણ
+આઇટમ:
 </div>
 
 <strong>ગ્રાહકની માહિતી:</strong><br>
 નામ: ${customer.name} | ID: ${customer.id} | શહેર: ${customer.city}<br>
-મોબાઇલ: ${customer.mobile} | લોન આઇટમ: ${customer.loanItem}<br><br>
+મોબાઇલ: ${customer.mobile} | આઇટમ: ${customer.loanItem}<br><br>
 
-<strong>લોન વિગતો:</strong>
+<strong>વિગતો:</strong>
 <table>
 <tr>
-<th>લોન ID</th>
+<th>ID</th>
 <th>રકમ</th>
 <th>વ્યાજ દર</th>
 <th>તારીખ</th>
+<th>રેફરન્સ</th>
 <th>કુલ વ્યાજ</th>
 <th>બાકી રકમ</th>
 </tr>
@@ -193,6 +194,7 @@ ${loans
 <td>₹${loan.amount.toLocaleString()}</td>
 <td>${loan.interestRate}%</td>
 <td>${loan.startDate}</td>
+<td>${loan.referenceNumber || '-'}</td>
 <td>₹${loan.totalInterest.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
 <td>₹${loan.remainingAmount.toLocaleString()}</td>
 </tr>`,
@@ -204,7 +206,7 @@ ${loans
 <table>
 <tr>
 <th>ચુકવણી ID</th>
-<th>લોન ID</th>
+<th>ID</th>
 <th>રકમ</th>
 <th>તારીખ</th>
 <th>રસીદ ID</th>
@@ -227,7 +229,7 @@ ${repayments
 
 <div class="summary">
 <strong>સારાંશ:</strong><br>
-કુલ લોન રકમ: ₹${customer.totalLoanAmount.toLocaleString()} | 
+કુલ રકમ: ₹${customer.totalLoanAmount.toLocaleString()} | 
 કુલ વ્યાજ: ₹${customer.totalInterest.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}<br>
 કુલ ચુકવેલ: ₹${customer.paidAmount.toLocaleString()} | 
 કુલ બાકી: ₹${customer.remainingAmount.toLocaleString()}
@@ -242,7 +244,7 @@ export const generateCustomersPrint = (customers: any[]) => {
 <div class="header-info">
 <strong>ગ્રાહકોની યાદી</strong><br>
 તારીખ: ${new Date().toLocaleDateString("gu-IN")}<br>
-ધિરાણ આઇટમ: ધિરાણ
+આઇટમ:
 </div>
 
 <table>
@@ -251,11 +253,11 @@ export const generateCustomersPrint = (customers: any[]) => {
 <th>નામ</th>
 <th>શહેર</th>
 <th>મોબાઇલ</th>
-<th>લોન રકમ</th>
+<th>રકમ</th>
 <th>વ્યાજ</th>
 <th>ચુકવેલ</th>
 <th>બાકી</th>
-<th>લોન આઇટમ</th>
+<th>આઇટમ</th>
 </tr>
 ${customers
   .map(
@@ -277,7 +279,7 @@ ${customers
 
 <div class="summary">
 કુલ ગ્રાહકો: ${customers.length} | 
-કુલ લોન રકમ: ₹${customers.reduce((sum, c) => sum + c.totalLoanAmount, 0).toLocaleString()} | 
+કુલ રકમ: ₹${customers.reduce((sum, c) => sum + c.totalLoanAmount, 0).toLocaleString()} | 
 કુલ બાકી રકમ: ₹${customers.reduce((sum, c) => sum + c.remainingAmount, 0).toLocaleString()}
 </div>
   `
@@ -288,22 +290,23 @@ ${customers
 export const generateLoansPrint = (loans: any[]) => {
   const content = `
 <div class="header-info">
-<strong>લોનની યાદી</strong><br>
+<strong>યાદી</strong><br>
 તારીખ: ${new Date().toLocaleDateString("gu-IN")}<br>
-ધિરાણ આઇટમ: ધિરાણ
+આઇટમ:
 </div>
 
 <table>
 <tr>
-<th>લોન ID</th>
+<th>ID</th>
 <th>ગ્રાહક</th>
 <th>રકમ</th>
 <th>વ્યાજ દર</th>
 <th>તારીખ</th>
+<th>રેફરન્સ</th>
 <th>કુલ વ્યાજ</th>
 <th>ચુકવેલ</th>
 <th>બાકી</th>
-<th>લોન આઇટમ</th>
+<th>આઇટમ</th>
 </tr>
 ${loans
   .map(
@@ -314,6 +317,7 @@ ${loans
 <td>₹${loan.amount.toLocaleString()}</td>
 <td>${loan.interestRate}%</td>
 <td>${loan.startDate}</td>
+<td>${loan.referenceNumber || '-'}</td>
 <td>₹${loan.totalInterest.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
 <td>₹${loan.paidAmount.toLocaleString()}</td>
 <td>₹${loan.remainingAmount.toLocaleString()}</td>
@@ -324,8 +328,8 @@ ${loans
 </table>
 
 <div class="summary">
-કુલ લોન: ${loans.length} | 
-કુલ લોન રકમ: ₹${loans.reduce((sum, l) => sum + l.amount, 0).toLocaleString()} | 
+કુલ: ${loans.length} | 
+કુલ રકમ: ₹${loans.reduce((sum, l) => sum + l.amount, 0).toLocaleString()} | 
 કુલ બાકી રકમ: ₹${loans.reduce((sum, l) => sum + l.remainingAmount, 0).toLocaleString()}
 </div>
   `

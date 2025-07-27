@@ -1,16 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FileText, BarChart3, Users, Printer, FileSpreadsheet } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAppStore } from "@/lib/store"
 import { generatePrintableContent } from "@/lib/pdf-utils"
 import { generateCustomersExcel, generateLoansExcel, generateRepaymentsExcel } from "@/lib/excel-utils"
 import { formatAmount } from "@/lib/utils"
+
+const REPORT_PASSWORD = "admin123"
 
 export default function ReportsPage() {
   const { customers, loans, repayments, history } = useAppStore()
@@ -19,6 +23,20 @@ export default function ReportsPage() {
   const [selectedMonth, setSelectedMonth] = useState("")
   const [selectedYear, setSelectedYear] = useState("")
   const [generatedReport, setGeneratedReport] = useState<any>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showPasswordDialog, setShowPasswordDialog] = useState(true)
+  const [password, setPassword] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+
+  const handlePasswordSubmit = () => {
+    if (password === REPORT_PASSWORD) {
+      setIsAuthenticated(true)
+      setShowPasswordDialog(false)
+      setPasswordError("")
+    } else {
+      setPasswordError("ખોટો પાસવર્ડ")
+    }
+  }
 
   const handleGenerateReport = () => {
     if (!reportType) {
@@ -85,29 +103,87 @@ export default function ReportsPage() {
       return
     }
 
-    let content = `${generatedReport.title}\nતારીખ: ${new Date().toLocaleDateString("gu-IN")}\n\nધિરાણ આઇટમ: ધિરાણ\n\n`
+    let content = `
+<div class="header-info">
+<strong>${generatedReport.title}</strong><br>
+તારીખ: ${new Date().toLocaleDateString("gu-IN")}<br>
+આઇટમ:
+</div>
+`
 
     if (generatedReport.customer) {
-      content += `ગ્રાહક: ${generatedReport.customer.name} (${generatedReport.customer.id})\n`
-      content += `શહેર: ${generatedReport.customer.city}\n`
-      content += `મોબાઇલ: ${generatedReport.customer.mobile}\n\n`
+      content += `
+<div class="summary">
+<strong>ગ્રાહકની માહિતી:</strong><br>
+નામ: ${generatedReport.customer.name} | ID: ${generatedReport.customer.id}<br>
+શહેર: ${generatedReport.customer.city} | મોબાઇલ: ${generatedReport.customer.mobile}
+</div>
+`
     }
 
-    if (generatedReport.loans) {
-      content += `લોન વિગતો:\n`
-      generatedReport.loans.forEach((loan: any, index: number) => {
-        content += `${index + 1}. ${loan.id} - ₹${formatAmount(loan.amount)} (${loan.startDate})\n`
-      })
-      content += `\nકુલ લોન: ₹${formatAmount(generatedReport.totalLoansGiven || 0)}\n\n`
+    // Summary statistics
+    if (generatedReport.totalLoansGiven !== undefined || generatedReport.totalRepayments !== undefined) {
+      content += `
+<div class="summary">
+<strong>સારાંશ:</strong><br>
+${generatedReport.totalLoansGiven !== undefined ? `કુલ રકમ આપેલ: ₹${formatAmount(generatedReport.totalLoansGiven)}<br>` : ""}
+${generatedReport.totalRepayments !== undefined ? `કુલ ચુકવણી: ₹${formatAmount(generatedReport.totalRepayments)}<br>` : ""}
+${generatedReport.totalInterestEarned !== undefined ? `કુલ વ્યાજ: ₹${formatAmount(generatedReport.totalInterestEarned)}<br>` : ""}
+${generatedReport.totalDiscountGiven !== undefined ? `કુલ છૂટ: ₹${formatAmount(generatedReport.totalDiscountGiven)}` : ""}
+</div>
+`
     }
 
-    if (generatedReport.repayments) {
-      content += `ચુકવણી વિગતો:\n`
-      generatedReport.repayments.forEach((repayment: any, index: number) => {
-        content += `${index + 1}. ${repayment.id} - ₹${formatAmount(repayment.amount)} (${repayment.date})\n`
-      })
-      content += `\nકુલ ચુકવણી: ₹${formatAmount(generatedReport.totalRepayments || 0)}\n`
-      content += `કુલ વ્યાજ: ₹${formatAmount(generatedReport.totalInterestEarned || 0)}\n\n`
+    if (generatedReport.loans && generatedReport.loans.length > 0) {
+      content += `
+<strong>વિગતો:</strong>
+<table>
+<tr>
+<th>ID</th>
+<th>ગ્રાહક</th>
+<th>રકમ</th>
+<th>વ્યાજ દર</th>
+<th>તારીખ</th>
+<th>સ્થિતિ</th>
+<th>બાકી રકમ</th>
+</tr>
+${generatedReport.loans.map((loan: any) => `
+<tr>
+<td>${loan.id}</td>
+<td>${loan.customerName}</td>
+<td>₹${formatAmount(loan.amount)}</td>
+<td>${loan.interestRate}%</td>
+<td>${loan.startDate}</td>
+<td>${loan.status}</td>
+<td>₹${formatAmount(loan.remainingAmount)}</td>
+</tr>`).join("")}
+</table>
+`
+    }
+
+    if (generatedReport.repayments && generatedReport.repayments.length > 0) {
+      content += `
+<strong>ચુકવણી વિગતો:</strong>
+<table>
+<tr>
+<th>ચુકવણી ID</th>
+<th>ગ્રાહક</th>
+<th>રકમ</th>
+<th>વ્યાજ માહિતી</th>
+<th>તારીખ</th>
+<th>રસીદ ID</th>
+</tr>
+${generatedReport.repayments.map((repayment: any) => `
+<tr>
+<td>${repayment.id}</td>
+<td>${repayment.customerName}</td>
+<td>₹${formatAmount(repayment.amount)}</td>
+<td>₹${formatAmount(repayment.interestInfo)}</td>
+<td>${repayment.date}</td>
+<td>${repayment.receiptId}</td>
+</tr>`).join("")}
+</table>
+`
     }
 
     generatePrintableContent(content, generatedReport.title)
@@ -259,6 +335,40 @@ export default function ReportsPage() {
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: currentYear - 2019 + 6 }, (_, i) => (2020 + i).toString()).reverse()
 
+  if (!isAuthenticated) {
+    return (
+      <Dialog open={showPasswordDialog} onOpenChange={() => {}} modal={true}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>રિપોર્ટ એક્સેસ</DialogTitle>
+            <DialogDescription>રિપોર્ટ સેક્શન એક્સેસ કરવા માટે પાસવર્ડ દાખલ કરો</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="password">પાસવર્ડ *</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                className="border-primary/30 focus:border-primary"
+              />
+              {passwordError && (
+                <p className="text-sm text-destructive mt-1">{passwordError}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handlePasswordSubmit} className="bg-primary hover:bg-primary/90">
+              એક્સેસ કરો
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -406,7 +516,7 @@ export default function ReportsPage() {
                 <div className="text-2xl font-bold text-primary">
                   ₹{formatAmount(loans.reduce((sum, loan) => sum + loan.amount, 0))}
                 </div>
-                <div className="text-sm text-muted-foreground">કુલ લોન આપેલ</div>
+                <div className="text-sm text-muted-foreground">કુલ આપેલ</div>
               </div>
               <div className="text-center p-4 bg-secondary/10 rounded-lg">
                 <div className="text-2xl font-bold text-secondary">
@@ -435,7 +545,7 @@ export default function ReportsPage() {
                 </Button>
                 <Button onClick={() => generateLoansExcel(loans)} variant="outline" className="flex-1 ml-2">
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  લોન Excel
+                  Excel
                 </Button>
               </div>
             </div>
@@ -472,7 +582,7 @@ export default function ReportsPage() {
                   <div className="text-xl font-bold text-secondary">
                     ₹{formatAmount(generatedReport.totalLoansGiven)}
                   </div>
-                  <div className="text-sm text-muted-foreground">કુલ લોન આપેલ</div>
+                  <div className="text-sm text-muted-foreground">કુલ આપેલ</div>
                 </div>
               )}
               {generatedReport.totalRepayments !== undefined && (
@@ -503,12 +613,12 @@ export default function ReportsPage() {
 
             {generatedReport.loans && generatedReport.loans.length > 0 && (
               <div className="mb-6">
-                <h3 className="font-semibold text-accent mb-3">લોન વિગતો</h3>
+                <h3 className="font-semibold text-accent mb-3">વિગતો</h3>
                 <div className="rounded-md border overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>લોન ID</TableHead>
+                        <TableHead>ID</TableHead>
                         <TableHead>ગ્રાહક</TableHead>
                         <TableHead>રકમ</TableHead>
                         <TableHead>તારીખ</TableHead>
@@ -579,7 +689,7 @@ export default function ReportsPage() {
                 <TableRow>
                   <TableHead>ગ્રાહક ID</TableHead>
                   <TableHead>નામ</TableHead>
-                  <TableHead>કુલ લોન</TableHead>
+                  <TableHead>કુલ</TableHead>
                   <TableHead>ચુકવેલ</TableHead>
                   <TableHead>બાકી</TableHead>
                   <TableHead>સ્થિતિ</TableHead>

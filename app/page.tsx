@@ -9,17 +9,18 @@ export default function HomePage() {
 
   useEffect(() => {
     // Check if user is logged in
-    const userSession = localStorage.getItem("user_session")
+    if (typeof window !== 'undefined') {
+      const userSession = localStorage.getItem("user_session")
 
-    if (userSession) {
-      // User is logged in, redirect to dashboard
-      router.push("/dashboard")
-    } else {
-      // User is not logged in, redirect to login
-      router.push("/login")
+      if (userSession) {
+        // User is logged in, redirect to dashboard
+        router.replace("/dashboard")
+      } else {
+        // User is not logged in, redirect to login
+        router.replace("/login")
+      }
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }, [router])
 
   if (isLoading) {

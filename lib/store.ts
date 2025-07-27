@@ -58,6 +58,7 @@ export interface Loan {
   remainingAmount: number
   loanItem: string
   notes: string
+  referenceNumber?: string
 }
 
 export interface Repayment {
@@ -127,6 +128,7 @@ interface AppState {
     startDate: string,
     loanItem: string,
     notes: string,
+    referenceNumber?: string,
   ) => Promise<void>
   calculateAvailableFunds: () => number
 }
@@ -309,7 +311,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     })
   },
 
-  addLoanToExistingCustomer: async (customerId, amount, interestRate, startDate, loanItem, notes) => {
+  addLoanToExistingCustomer: async (customerId, amount, interestRate, startDate, loanItem, notes, referenceNumber) => {
     const state = get()
     const customer = state.customers.find((c) => c.id === customerId)
     if (!customer) return
@@ -331,6 +333,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       remaining_amount: amount + totalInterest,
       loan_item: loanItem,
       notes,
+      reference_number: referenceNumber || null,
     }
 
     const existingHistoryIds = state.history.map((h) => h.id)
@@ -396,6 +399,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       remaining_amount: customerData.totalLoanAmount + totalInterest,
       loan_item: customerData.loanItem,
       notes: customerData.notes,
+      reference_number: null,
     }
 
     const existingHistoryIds = state.history.map((h) => h.id)
@@ -489,6 +493,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       remaining_amount: loanData.amount + totalInterest,
       loan_item: loanData.loanItem,
       notes: loanData.notes,
+      reference_number: loanData.referenceNumber || null,
     }
 
     const existingHistoryIds = state.history.map((h) => h.id)
