@@ -88,9 +88,11 @@ export default function RepaymentsPage() {
     }
   }, [customerId, loans, repayments, calculateInterest])
 
-  const resetForm = () => {
-    setCustomerId("")
-    setCustomerSearchTerm("")
+  const resetForm = (clearCustomer = true) => {
+    if (clearCustomer) {
+      setCustomerId("")
+      setCustomerSearchTerm("")
+    }
     setAmount("")
     setInterestInfo("") // Will be reset by useEffect
     setDiscountGiven("")
@@ -135,7 +137,7 @@ export default function RepaymentsPage() {
       notes,
       verificationImages: uploadedImageUrls,
     })
-    resetForm()
+    resetForm(false) // Don't clear customer selection
     setIsAddRepaymentOpen(false)
   }
 
@@ -219,7 +221,7 @@ export default function RepaymentsPage() {
         <h1 className="text-3xl font-bold text-primary">ચુકવણીઓ</h1>
         <Dialog open={isAddRepaymentOpen} onOpenChange={setIsAddRepaymentOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="bg-primary hover:bg-primary/90 text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-white">
               <Plus className="mr-2 h-4 w-4" /> નવી ચુકવણી ઉમેરો
             </Button>
           </DialogTrigger>
@@ -347,7 +349,10 @@ export default function RepaymentsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddRepaymentOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                resetForm(false) // Don't clear customer when canceling
+                setIsAddRepaymentOpen(false)
+              }}>
                 રદ કરો
               </Button>
               <Button onClick={handleAddRepayment} className="bg-primary hover:bg-primary/90 text-white">
